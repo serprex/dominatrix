@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>Dominatrix</title>
+<style>
+#urlbar{display:block;width:100%;height:3%}
+#view{border:0;width:100%;height:97%}
+</style>
+</head>
+<body>
+<input id="urlbar" />
+<iframe id="view"></iframe>
+<script type="text/javascript">"use strict";
+var urlbar = document.getElementById("urlbar"),
+	view = document.getElementById("view");
+urlbar.addEventListener("keydown", function(e){
+	if (e.keyCode == 13) view.src = this.value;
+});
+</script>
+</body>
+</html>

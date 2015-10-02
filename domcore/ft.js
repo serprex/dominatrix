@@ -10,10 +10,44 @@ exports.BitmapSize = struct({
 	xppem:'uint64',
 	yppem:'uint64',
 });
+exports.CharMap = struct({
+	face:ref.types.void,
+	encoding:'int',
+	platform_id:'ushort',
+	encoding_id:'ushort',
+});
+exports.CharMapp = ref.refType(exports.CharMap);
+exports.BBox = struct({
+	xMin:'uint64',
+	xMax:'uint64',
+	yMin:'uint64',
+	yMax:'uint64',
+});
+exports.Generic = struct({
+	data:ref.types.void,
+	finalizer:ref.types.void,
+});
+exports.GlyphMetrics = struct({
+	width:'uint64',
+	height:'uint64',
+	horiBearingX:'uint64',
+	horiBearingY:'uint64',
+	horiAdvance:'uint64',
+	vertBearingX:'uint64',
+	vertBearingY:'uint64',
+	vertAdvance:'uint64',
+});
+exports.GlyphSlot = struct({
+	library:ref.types.void,
+	face:ref.types.void,
+	next:ref.types.void,
+	reserved:'uint',
+	generic:exports.Generic,
+
+});
 exports.Libraryp = ref.refType(exports.Library);
 exports.BitmapSizep = ref.refType(exports.BitmapSize);
 var string = ref.types.CString;
-//exports.Face = ref.types.void;
 exports.Face = struct({
 	numFaces:'int64',
 	faceIndex:'int64',
@@ -24,8 +58,19 @@ exports.Face = struct({
 	styleName:string,
 	numFixedSizes:'int',
 	availableSizes:exports.BitmapSizep;
-	num_charmaps:'int',
-	char
+	numCharmaps:'int',
+	charmaps:exports.CharMapp,
+	generic:exports.Generic,
+	bbox:exports.BBox,
+	unitsPerEm:'ushort',
+	ascender:'short',
+	descender:'short',
+	height:'short',
+	maxAdvanceWidth:'short',
+	maxAdvanceHeight:'short',
+	glyph:,
+	size:,
+	charmap:,
 });
 exports.Facep = ref.refType(ref.types.Face);
 var ft = ffi.Library("libfreetype", {

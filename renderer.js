@@ -1,7 +1,11 @@
 "use strict";
 var http = require("http");
 var css = require("css");
-var handler = {
+var gl = require("gl");
+var ft = require("freetype2");
+var fs = require("fs");
+var dejavu = ft.New_Memory_Face(fs.readFileSync("/usr/share/fonts/TTF/DejaVuSans.ttf"), 0);
+var processHandler = {
 	link:function(node){
 		var isSheet = false, href = null;
 		for(var i=0; i<attr.length; i++){
@@ -24,9 +28,17 @@ var handler = {
 		this.styles.push(css.parse(node.childNodes[0]));
 	}
 };
+var drawHandler = function(node){
+	"#text":function(node){
+		var text = node.value;
+		for(var i=0; i<text.length; i++){
+
+		}
+	},
+};
 function processCore(node){
 	var name = node.nodeName;
-	if (name in handler) handler[name].call(this, node);
+	if (name in processHandler) processHandler[name].call(this, node);
 	else node.childNodes.forEach(processCore, this);
 }
 exports.process = function(html){
@@ -38,5 +50,10 @@ exports.process = function(html){
 	processCore.call(doc, html);
 	return doc;
 }
+function drawCore(node){
+	if (name in drawHandler) drawHandler[name].call(this, node);
+	else node.childNodes.forEach(drawCore, this);
+}
 exports.draw = function(doc){
+	drawCore.call(doc, doc.body);
 }

@@ -1,22 +1,19 @@
 {
-	"name":"dominatrix",
-	"description":"Minimalist web browser",
-	"version":"0.0.0",
-	"homepage":"http://github.com/serprex/dominatrix",
-	"author":"serprex",
-	"repository":{
-		"type":"git","url":"https://github.com/olalonde/node-notify.git"
-	},
-	"scripts":{
-		"preinstall":"false && node-gyp configure && node-gyp build",
-		"preuninstall":"node-gyp clean"
-	},
-	"main":"main.js",
-	"depedencies":{
-		"parse5":"^1.5.0",
-		"css":"^2.2.1",
-		"ffi":"^2.0.0"
-	},
-	"license":"MIT",
-	"readme":"readme"
+  "name": "dominatrix",
+  "description": "Minimalist web browser",
+  "version": "0.0.0",
+  "homepage": "http://github.com/serprex/dominatrix",
+  "author": "serprex",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/olalonde/node-notify.git"
+  },
+  "main": "main.js",
+  "depedencies": {
+    "parse5": "^1.5.0",
+    "css": "^2.2.1",
+	"nan": "^2.0.9"
+  },
+  "license": "MIT",
+  "readme": "readme"
 }
