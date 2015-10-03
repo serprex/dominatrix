@@ -151,7 +151,7 @@ function styleCore(parent, node){
 	for (var key in parent.style) node.style[key] = parent.style[key];
 	mysty.forEach(style => (node.style[style.property] = style.value));
 	if (node.attrs.style){
-		node.attrs.style.split(';').forEach((x) => {
+		node.attrs.style.split(';').forEach(x => {
 			var a=x.indexOf(':');
 			if (~a) node.style[x.slice(0,a)] = x.slice(a+1);
 		});
@@ -179,6 +179,6 @@ Page.prototype.parse = function(html){
 	this.process(htmlparser.parse(html));
 }
 Page.prototype.render = function(){
-	domcore.glloop(this.body, this.domcache);
+	if (!domcore.glloop(this.body, this.domcache)) process.exit();
 }
 exports.Page = Page;

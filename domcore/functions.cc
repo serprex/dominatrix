@@ -44,13 +44,20 @@ NAN_METHOD(glinit) {
 	glOrtho(0,640,480,0,1,-1);
 }
 
+static void loopcore(v8::Handle<v8::Object> node){
+	auto content = v8::Local<v8::Array>::Cast(node->Get(Nan::New("content").ToLocalChecked()));
+	glRectf(content->Get(0)->ToNumber()->Value(),content->Get(1)->ToNumber()->Value(),content->Get(2)->ToNumber()->Value(),content->Get(3)->ToNumber()->Value());
+	auto children = v8::Local<v8::Array>::Cast(node->Get(Nan::New("childNodes").ToLocalChecked()));
+	for(unsigned i=0; i<children->Length(); i++) loopcore(children->Get(i).As<v8::Object>());
+}
+
 NAN_METHOD(glloop) {
 	if (glfwWindowShouldClose(wnd)){
 		info.GetReturnValue().Set(false);
 	}else{
 		glfwPollEvents();
 		glColor3ub(100, 50, 25);
-		glRecti(10, 10, 20, 20);
+		loopcore(info[0].As<v8::Object>());
 		glfwSwapBuffers(wnd);
 		info.GetReturnValue().Set(true);
 	}
