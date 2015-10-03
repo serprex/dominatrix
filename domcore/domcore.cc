@@ -1,26 +1,17 @@
 #include "functions.h"
 
-using v8::FunctionTemplate;
-
+#define mkFunc(x) Nan::Set(target, Nan::New(#x).ToLocalChecked(), Nan::GetFunction(Nan::New<v8::FunctionTemplate>(x)).ToLocalChecked()) 
 NAN_MODULE_INIT(InitAll) {
-	Nan::Set(target, Nan::New("nothing").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(nothing)).ToLocalChecked());
-	Nan::Set(target, Nan::New("aString").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(aString)).ToLocalChecked());
-	Nan::Set(target, Nan::New("aBoolean").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(aBoolean)).ToLocalChecked());
-	Nan::Set(target, Nan::New("aNumber").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(aNumber)).ToLocalChecked());
-	Nan::Set(target, Nan::New("anObject").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(anObject)).ToLocalChecked());
-	Nan::Set(target, Nan::New("anArray").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(anArray)).ToLocalChecked());
-	Nan::Set(target, Nan::New("callback").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(callback)).ToLocalChecked());
-	Nan::Set(target, Nan::New("glinit").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(glinit)).ToLocalChecked());
-	Nan::Set(target, Nan::New("glloop").ToLocalChecked(),
-		Nan::GetFunction(Nan::New<FunctionTemplate>(glloop)).ToLocalChecked());
+	mkFunc(nothing);
+	mkFunc(aString);
+	mkFunc(aBoolean);
+	mkFunc(aNumber);
+	mkFunc(anObject);
+	mkFunc(anArray);
+	mkFunc(callback);
+	mkFunc(glinit);
+	mkFunc(glloop);
+	mkFunc(glswap);
+	mkFunc(glrect);
 }
-
 NODE_MODULE(domcore, InitAll)

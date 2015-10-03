@@ -14,6 +14,8 @@ NAN_METHOD(aNumber);
 NAN_METHOD(anObject);
 NAN_METHOD(anArray);
 NAN_METHOD(callback);
+NAN_METHOD(glswap);
+NAN_METHOD(glrect);
 NAN_METHOD(glinit);
 NAN_METHOD(glloop);
 #endif

@@ -1,5 +1,5 @@
 #include "functions.h"
-
+#include <cstdlib>
 GLFWwindow*wnd;
 
 
@@ -44,10 +44,23 @@ NAN_METHOD(glinit) {
 	glOrtho(0,640,480,0,1,-1);
 }
 
+NAN_METHOD(glrect) {
+	glColor3ub(rand(), rand(), rand());
+	glRectf(info[0]->NumberValue(), info[1]->NumberValue(), info[2]->NumberValue(), info[3]->NumberValue());
+}
+
+NAN_METHOD(glswap) {
+	glfwSwapBuffers(wnd);
+}
+
 static void loopcore(v8::Handle<v8::Object> node){
-	auto content = v8::Local<v8::Array>::Cast(node->Get(Nan::New("content").ToLocalChecked()));
+	auto contentStr = Nan::New("content").ToLocalChecked();
+	if (!node->Has(contentStr) || node->Get(contentStr)->IsUndefined()) return;
+	auto content = v8::Local<v8::Array>::Cast(node->Get(contentStr));
 	glRectf(content->Get(0)->ToNumber()->Value(),content->Get(1)->ToNumber()->Value(),content->Get(2)->ToNumber()->Value(),content->Get(3)->ToNumber()->Value());
-	auto children = v8::Local<v8::Array>::Cast(node->Get(Nan::New("childNodes").ToLocalChecked()));
+	auto childNodesStr = Nan::New("childNodes").ToLocalChecked();
+	if (!node->Has(childNodesStr) || node->Get(childNodesStr)->IsUndefined()) return;
+	auto children = v8::Local<v8::Array>::Cast(node->Get(childNodesStr));
 	for(unsigned i=0; i<children->Length(); i++) loopcore(children->Get(i).As<v8::Object>());
 }
 
