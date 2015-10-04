@@ -44,8 +44,15 @@ NAN_METHOD(glinit) {
 	glOrtho(0,640,480,0,1,-1);
 }
 
-NAN_METHOD(glrect) {
+NAN_METHOD(glcolor) {
+	glColor3ub(info[0]->Int32Value(), info[1]->Int32Value(), info[2]->Int32Value());
+}
+
+NAN_METHOD(glrandcolor) {
 	glColor3ub(rand(), rand(), rand());
+}
+
+NAN_METHOD(glrect) {
 	glRectf(info[0]->NumberValue(), info[1]->NumberValue(), info[2]->NumberValue(), info[3]->NumberValue());
 }
 

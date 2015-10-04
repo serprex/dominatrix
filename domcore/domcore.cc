@@ -12,6 +12,8 @@ NAN_MODULE_INIT(InitAll) {
 	mkFunc(glinit);
 	mkFunc(glloop);
 	mkFunc(glswap);
+	mkFunc(glcolor);
+	mkFunc(glrandcolor);
 	mkFunc(glrect);
 }
 NODE_MODULE(domcore, InitAll)
