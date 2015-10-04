@@ -25,13 +25,13 @@ function specificity(x){
 			a += 1<<(s[0] == '#' ? 16 : s[0]=='.' ? 8 : 0);
 		}
 	});
-	return a;
-}
-function cssparse(style){
-	var rules = css(style,cssparseopt).stylesheet.rules;
-	rules.sort((x,y) => specificity(y)-specificity(x));
-	return rules;
-}
+		return a;
+	}
+	function cssparse(style){
+		var rules = css(style,cssparseopt).stylesheet.rules;
+		rules.sort((x,y) => specificity(y)-specificity(x));
+		return rules;
+	}
 var processHandler = {
 	link:function(node){
 		var isSheet = false, href = null;
@@ -96,7 +96,7 @@ function calcBlockWidth(parent){
 	['padding', 'border', 'margin'].forEach(prop => {
 		var defval = style[prop];
 		['left','top','right','bottom'].forEach((dim, idx) => {
-			var val = this[prop][idx] = parsePx(style[prop+'-'+dim] || defval || 0);
+			var val = this[prop][idx] = parsePx(style[prop+'-'+dim] || defval);
 			if (!(idx&1)) total += val;
 		});
 	});
@@ -125,21 +125,21 @@ function calcBlockWidth(parent){
 		}
 	}
 	this.content[2] = parsePx(width);
-	this.padding[0] = parsePx(style['padding-left'] || style['padding'] || 0);
-	this.padding[2] = parsePx(style['padding-right'] || style['padding'] || 0);
-	this.border[0] = parsePx(style['border-left'] || style['border'] || 0);
-	this.border[2] = parsePx(style['border-right'] || style['border'] || 0);
+	this.padding[0] = parsePx(style['padding-left'] || style['padding']);
+	this.padding[2] = parsePx(style['padding-right'] || style['padding']);
+	this.border[0] = parsePx(style['border-left'] || style['border']);
+	this.border[2] = parsePx(style['border-right'] || style['border']);
 }
 function calcBlockPos(parent){
 	var style = this.style;
-	this.padding[1] = parsePx(style['padding-top'] || style['padding'] || 0);
-	this.padding[3] = parsePx(style['padding-bottom'] || style['padding'] || 0);
-	this.border[1] = parsePx(style['border-top'] || style['border'] || 0);
-	this.border[3] = parsePx(style['border-bottom'] || style['border'] || 0);
-	this.margin[1] = parsePx(style['margin-top'] || style['margin'] || 0);
-	this.margin[3] = parsePx(style['margin-bottom'] || style['margin'] || 0);
+	this.padding[1] = parsePx(style['padding-top'] || style['padding']);
+	this.padding[3] = parsePx(style['padding-bottom'] || style['padding']);
+	this.border[1] = parsePx(style['border-top'] || style['border']);
+	this.border[3] = parsePx(style['border-bottom'] || style['border']);
+	this.margin[1] = parsePx(style['margin-top'] || style['margin']);
+	this.margin[3] = parsePx(style['margin-bottom'] || style['margin']);
 	this.content[0] = parent.content[0] + this.padding[0] + this.border[0] + this.margin[0];
-	this.content[1] = parent.content[1] + parent.content[3] + parent.padding[1] + parent.border[1] + parent.margin[1];
+	this.content[1] = parent.content[1] + parent.content[3] + this.padding[1] + this.border[1] + this.margin[1];
 }
 function nodeHeight(node){
 	return node.content[3] + node.padding[1] + node.padding[3] + node.border[1] + node.border[3] + node.margin[1] + node.margin[3];
@@ -151,7 +151,6 @@ function nodeAttr(node, key){
 	}
 }
 function styleCore(parent, node){
-	if (!node.attrs) return;
 	var mysty = this.styles.filter(style => style.selectors && style.selectors.every(selector => selectorMatch(selector, node)));
 	node.style = {};
 	for (var key in parent.style) node.style[key] = parent.style[key];
@@ -162,9 +161,14 @@ function styleCore(parent, node){
 			if (~a) node.style[x.slice(0,a)] = x.slice(a+1);
 		});
 	}
+	if (node.nodeName == '#text'){
+		node.style.height = '16px';
+		node.style.display = node.value.match(/^\s*$/) ? 'none' : 'inline';
+	}
+	if (node.style.display == 'none') return;
 	calcBlockWidth.call(node, parent);
 	calcBlockPos.call(node, parent);
-	node.childNodes.forEach(styleCore.bind(this, node));
+	if (node.childNodes) node.childNodes.forEach(styleCore.bind(this, node));
 	if (node.style.height && node.style.height != 'auto') node.content[3] = parsePx(node.style.height);
 	parent.content[3] += nodeHeight(node);
 }
@@ -187,14 +191,25 @@ Page.prototype.parse = function(html){
 var firstrun = true;
 function renderCore(node){
 	if (firstrun) console.log(node);
-	if (node.style){
+	if (node.style.visibility == 'hidden') return;
+	if (node.content){
+		if (node.style){
+			var color = node.style['background-color'];
+			if (color){
+				var r=parseInt(color.slice(1,3),16), g=parseInt(color.slice(3,5),16), b=parseInt(color.slice(5),16);
+				domcore.glcolor(r,g,b);
+			}else domcore.glrandcolor();
+		}
+		domcore.glrect(node.content[0], node.content[1], node.content[0]+node.content[2], node.content[1]+node.content[3]);
+	}
+	if (node.nodeName == '#text' && node.style.display != 'none'){
 		if (node.style.color){
 			var color = node.style.color;
 			var r=parseInt(color.slice(1,3),16), g=parseInt(color.slice(3,5),16), b=parseInt(color.slice(5),16);
 			domcore.glcolor(r,g,b);
-		}else domcore.glrandcolor();
+		}
+		domcore.gltext(node.content[0], node.content[1], node.value);
 	}
-	if (node.content) domcore.glrect(node.content[0], node.content[1], node.content[0]+node.content[2], node.content[1]+node.content[3]);
 	if (node.childNodes) node.childNodes.forEach(renderCore);
 }
 Page.prototype.render = function(){
