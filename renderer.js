@@ -14,7 +14,7 @@ function Page(width){
 	this.domcache = {};
 	this.content = new Float32Array([0,0,width,0]);
 	this.padding = this.border = this.margin = new Float32Array(4);
-	this.style = {};
+	this.style = {display:'block',width:width+'px'};
 }
 var cssparseopt = {silent:true};
 function specificity(x){
@@ -88,10 +88,6 @@ function parsePx(str){
 function calcBlockWidth(parent){
 	var style = this.style;
 	var width = style.width || 'auto';
-	this.content = new Float32Array(4);
-	this.padding = new Float32Array(4);
-	this.border = new Float32Array(4);
-	this.margin = new Float32Array(4);
 	var total = parsePx(width);
 	['padding', 'border', 'margin'].forEach(prop => {
 		var defval = style[prop];
@@ -141,6 +137,30 @@ function calcBlockPos(parent){
 	this.content[0] = parent.content[0] + this.padding[0] + this.border[0] + this.margin[0];
 	this.content[1] = parent.content[1] + parent.content[3] + this.padding[1] + this.border[1] + this.margin[1];
 }
+function calcInlinePos(parent, idx){
+	var style = this.style;
+	['padding', 'border', 'margin'].forEach(prop => {
+		var defval = style[prop];
+		['left','top','right','bottom'].forEach((dim, idx) => {
+			this[prop][idx] = parsePx(style[prop+'-'+dim] || defval);
+		});
+	});
+	this.content[2] = parsePx(style['width']);
+	this.content[3] = parsePx(style['height']);
+	if (idx){
+		for(var i=0; i<2; i++){
+			var prev = parent.childNodes[idx-1];
+			this.content[i] = prev.content[i] + prev.content[i+2] + prev.margin[i+2] + prev.border[i+2] + prev.padding[i+2] +
+				this.margin[i] + this.border[i] + this.padding[i];
+			if (this.content[i] + this.content[i+2] > parent.content[i] + parent.content[i+2]){
+				this.content[i] = parent.content[i]+parent.margin[i] +
+					this.margin[i] + this.border[i] + this.padding[i];
+			}
+		}
+	}else{
+		for(var i=0; i<2; i++) this.content[i] = parent.content[i]+parent.margin[i] + this.margin[i] + this.border[i] + this.padding[i];
+	}
+}
 function nodeHeight(node){
 	return node.content[3] + node.padding[1] + node.padding[3] + node.border[1] + node.border[3] + node.margin[1] + node.margin[3];
 }
@@ -150,7 +170,7 @@ function nodeAttr(node, key){
 			if (node.attrs[i].name == key) return node.attrs[i].value;
 	}
 }
-function styleCore(parent, node){
+Page.prototype.styleNode = function(parent, node){
 	var mysty = this.styles.filter(style => style.selectors && style.selectors.every(selector => selectorMatch(selector, node)));
 	node.style = {};
 	for (var key in parent.style) node.style[key] = parent.style[key];
@@ -165,15 +185,42 @@ function styleCore(parent, node){
 		node.style.height = '16px';
 		node.style.display = node.value.match(/^\s*$/) ? 'none' : 'inline';
 	}
-	if (node.style.display == 'none') return;
-	calcBlockWidth.call(node, parent);
-	calcBlockPos.call(node, parent);
-	if (node.childNodes) node.childNodes.forEach(styleCore.bind(this, node));
+}
+Page.prototype.styleCore = function(parent, node, idx){
+	node.content = new Float32Array(4);
+	node.padding = new Float32Array(4);
+	node.border = new Float32Array(4);
+	node.margin = new Float32Array(4);
+	if (node.style.display == 'block'){
+		calcBlockWidth.call(node, parent);
+		calcBlockPos.call(node, parent);
+	}else if (node.style.display == 'inline'){
+		calcInlinePos.call(node, parent, idx);
+	}else if (node.style.display == 'none') return;
+	if (node.childNodes){
+		var blockEnd = -1;
+		for(var i=node.childNodes.length-1; i>-1; i--){
+			var n = node.childNodes[i];
+			this.styleNode(node, n);
+			if (node.style.display == 'block' && n.style.display == 'inline' && !~blockEnd){
+				blockEnd = i;
+			}else if (node.style.display == 'block' && n.style.display == 'block' && ~blockEnd && (i!=0 || blockEnd!=node.childNodes.length-1)){
+				var anonBlock = {
+					nodeName:'#anon',
+					style:{display:'block'},
+					childNodes:null
+				};
+				anonBlock.childNodes = node.childNodes.splice(i, blockEnd - i, anonBlock);
+			}
+		}
+		node.childNodes.forEach((x,i) => this.styleCore(node, x, i));
+	}
 	if (node.style.height && node.style.height != 'auto') node.content[3] = parsePx(node.style.height);
 	parent.content[3] += nodeHeight(node);
 }
 Page.prototype.restyle = function(){
-	styleCore.call(this, this, this.body);
+	this.styleNode(this, this.body);
+	this.styleCore(this, this.body, 0);
 }
 Page.prototype.parseLink = function(url){
 	return new Promise((resolve, reject) => {
