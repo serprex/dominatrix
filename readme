@@ -1,18 +1,9 @@
-dominatrix is an experiment in code reuse for implementing a browser
+Experiment in code reuse for implementing a browser
 
-JS via node's vm module
-HTML parsing via parse5
-CSS parsing via css
+JS via node's `vm` module
+HTML parsing via `parse5`
+CSS parsing via `css`
 
-All that's missing is rendering these pieces together. Roadmap:
-1 Implement basic positional logic & text rendering
-2 Decompose most HTML elements into styled divs (issue: canvas)
-3 Implement UI as an html page that displays content through an iframe
-4 Flesh out CSS rendering until sites rendered acceptably
-5 Improve UI
+Node's clientside rendering is lacking, so rendering will have to be implemented on top of a C++ addon `domcore` which'll leverage `GLFW` & `FreeType2`
 
-#3 should likely be split as the executable,
-the rest of the code a general library for HTML UIs
-
-Currently thinking of using a gl/glfw/freetype stack,
-was hoisting via ffi; leaning towards node glue in C as FreeType's API is terrible (exposed struct layout)
+No widget toolkits will be used. HTML widgets will bootstrap on the dom implementation
