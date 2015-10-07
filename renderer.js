@@ -104,7 +104,7 @@ function calcBlockWidth(parent){
 	var underflow = parentWidth - total,
 		auto = (width == 'auto')<<2|(style['margin-left'] == 'auto')<<1|(style['margin-right'] == 'auto');
 	if (!auto){
-		this.margin[2] = parsePx(style['margin-right']);
+		this.margin[2] = parsePx(style['margin-right']) + underflow;
 	}else if (auto == 1){
 		this.margin[2] = underflow;
 	}else if (auto == 2){
