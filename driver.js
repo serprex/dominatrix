@@ -72,13 +72,13 @@ class Layout {
 				if (!(didx&1)) total += val;
 			});
 		});
-		var parentWidth = this.parent.contentRight - this.parent.contentLeft;
+		var parentWidth = this.parent.contentRight;
 		if (width != 'auto' && total > parentWidth){
 			if (!style['margin-left'] || style['margin-left'] == 'auto') this.marginLeft = 0;
 			if (!style['margin-right'] || style['margin-right'] == 'auto') this.marginRight = 0;
 		}
 		var underflow = parentWidth - total,
-			auto = (width == 'auto')<<2|(!style['margin-left'] || style['margin-left'] == 'auto')<<1|(!style['margin-right'] || style['margin-right'] == 'auto');
+			auto = (width == 'auto')<<2|(style['margin-left'] == 'auto')<<1|(style['margin-right'] == 'auto');
 		if (!auto) this.marginRight = parsePx(style['margin-right']) + underflow;
 		else if (auto == 1) this.marginRight = underflow;
 		else if (auto == 2) this.marginLeft = underflow;
@@ -119,6 +119,7 @@ class Layout {
 			newlayout.build(node.childNodes[i]);
 		}
 		this.contentBottom += newlayout.totalHeight;
+		if (node.style && node.style.height) this.contentBottom = parsePx(node.style.height);
 		this.children.push(newlayout);
 	}
 	draw(){
@@ -129,6 +130,12 @@ class Layout {
 				domcore.glcolor(col, col>>8, col>>16);
 			}else domcore.glrandcolor();
 			domcore.glrect(this.data[0], this.data[1], this.data[0] + this.data[2], this.data[1] + this.data[3]);
+		}else if (this.node && this.node.nodeName == '#text'){
+			if (this.parent && this.parent.node && this.parent.node.style && this.parent.node.style.color){
+				var col = parseRgb(this.parent.node.style.color);
+				domcore.glcolor(col, col>>8, col>>16);
+			}
+			domcore.gltext(this.contentLeft, this.contentTop, this.node.data);
 		}
 		this.children.forEach(c => c.draw());
 	}
@@ -137,7 +144,6 @@ class Page extends Layout {
 	constructor(){
 		super(null, null);
 		this.contentRight = 800;
-		this.contentHeight = 600;
 		this.ctx = null;
 		this.window = null;
 	}
