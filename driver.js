@@ -6,7 +6,7 @@ function parsePx(str){
 }
 function parseRgb(str){
 	var rgb = str.slice(4, -1).split(','), ret = 0;
-	for(var i = 0; i<3; i++) ret |= (parseInt(rgb[i],10)||0)<<(i<<3);
+	for(var i = 0; i<3; i++) ret |= (parseInt(rgb[i].trim(),10)||0)<<(i<<3);
 	return ret;
 }
 class Layout {
@@ -93,19 +93,19 @@ class Layout {
 			}
 		}
 		this.contentRight = parsePx(width);
-		this.paddingLeft = parsePx(style['padding-left'] || style['padding']);
-		this.paddingRight = parsePx(style['padding-right'] || style['padding']);
-		this.borderLeft = parsePx(style['border-left'] || style['border']);
-		this.borderRight = parsePx(style['border-right'] || style['border']);
+		this.paddingLeft = parsePx(style['padding-left'] || style.padding);
+		this.paddingRight = parsePx(style['padding-right'] || style.padding);
+		this.borderLeft = parsePx(style['border-left'] || style.border);
+		this.borderRight = parsePx(style['border-right'] || style.border);
 	}
 	calcBlockPos(node){
 		var style = node.style || {};
-		this.paddingTop = parsePx(style["padding-top"] || style["padding"]);
-		this.paddingBottom = parsePx(style["padding-bottom"] || style["padding"]);
-		this.borderTop = parsePx(style["border-top"] || style["border"]);
-		this.borderBottom = parsePx(style["border-bottom"] || style["border"]);
-		this.marginTop = parsePx(style["margin-top"] || style["margin"]);
-		this.marginBottom = parsePx(style["margin-bottom"] || style["margin"]);
+		this.paddingTop = parsePx(style['padding-top'] || style.padding);
+		this.paddingBottom = parsePx(style['padding-bottom'] || style.padding);
+		this.borderTop = parsePx(style['border-top'] || style.border);
+		this.borderBottom = parsePx(style['border-bottom'] || style.border);
+		this.marginTop = parsePx(style['margin-top'] || style.margin);
+		this.marginBottom = parsePx(style['margin-bottom'] || style.margin);
 		this.contentLeft = this.parent.contentLeft + this.paddingLeft + this.borderLeft + this.marginLeft;
 		this.contentTop = this.parent.contentTop + this.parent.contentBottom + this.paddingTop + this.borderTop + this.marginTop; 
 	}
@@ -114,27 +114,23 @@ class Layout {
 		var newlayout = new Layout(this, node);
 		newlayout.calcBlockWidth(node);
 		newlayout.calcBlockPos(node);
-		if (node.childNodes){
-			for(var i=0; i<node.childNodes.length; i++){
-				newlayout.build(node.childNodes[i]);
-			}
+		if (node.nodeName == '#text') newlayout.contentBottom = 16;
+		for(var i=0; i<node.childNodes.length; i++){
+			newlayout.build(node.childNodes[i]);
 		}
-		this.contentTop += newlayout.totalHeight;
+		this.contentBottom += newlayout.totalHeight;
 		this.children.push(newlayout);
 	}
 	draw(){
-		var children = this.children;
 		if (this.node && this.node.style){
+			if (this.node.style.visibility == 'hidden') return;
 			if (this.node.style['background-color']){
 				var col = parseRgb(this.node.style['background-color']);
 				domcore.glcolor(col, col>>8, col>>16);
 			}else domcore.glrandcolor();
+			domcore.glrect(this.data[0], this.data[1], this.data[0] + this.data[2], this.data[1] + this.data[3]);
 		}
-		domcore.glrect(this.data[0], this.data[1], this.data[0] + this.data[2], this.data[1] + this.data[3]);
-		for(var i=0; i<children.length; i++){
-			children[i].draw(children);
-		}
-		domcore.glswap();
+		this.children.forEach(c => c.draw());
 	}
 }
 class Page extends Layout {
@@ -153,12 +149,11 @@ class Page extends Layout {
 		this.window = new Window(jsdomopts);
 		this.window.document.write(html);
 		this.window.document.close();
-		var body = this.window.document.children[0].children[1];
-		this.children[0] = new Layout(this, body);
-		this.build(body);
+		this.build(this.window.document.body);
 	}
 	render(){
-		this.children[0].draw();
+		this.draw();
+		domcore.glswap();
 	}
 }
 exports.Page = Page;
