@@ -5,7 +5,6 @@ var p5 = require('parse5');
 var css = require('css/lib/parse');
 var vm = require('vm');
 var domcore = require('./domcore');
-var htmlparser = new p5.Parser();
 function Page(width){
 	this.ctx = null;
 	this.styles = null;
@@ -233,7 +232,7 @@ Page.prototype.parseLink = function(url){
 	});
 }
 Page.prototype.parse = function(html){
-	this.process(htmlparser.parse(html));
+	this.process(p5.parse(html));
 }
 var firstrun = true;
 function renderCore(node){

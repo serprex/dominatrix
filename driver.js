@@ -5,8 +5,12 @@ function parsePx(str){
 	return parseInt(str, 10) || 0;
 }
 function parseRgb(str){
-	var rgb = str.slice(4, -1).split(','), ret = 0;
-	for(var i = 0; i<3; i++) ret |= (parseInt(rgb[i].trim(),10)||0)<<(i<<3);
+	var idx = 4, ret = 0;
+	for(var i = 0; i<3; i++) {
+		var nidx = str.indexOf(',', idx);
+		ret |= (parseInt(str.slice(idx, (~nidx ? nidx : undefined)).trim()) || 0)<<(i<<3);
+		idx = nidx+1;
+	}
 	return ret;
 }
 class Layout {
@@ -15,6 +19,7 @@ class Layout {
 		this.children = [];
 		this.node = node;
 		this.parent = parent;
+		this.display = 'inline';
 	}
 	getContent(x) { return this.data[x] }
 	getPadding(x) { return this.data[x+4] }
@@ -109,16 +114,41 @@ class Layout {
 		this.contentLeft = this.parent.contentLeft + this.paddingLeft + this.borderLeft + this.marginLeft;
 		this.contentTop = this.parent.contentTop + this.parent.contentBottom + this.paddingTop + this.borderTop + this.marginTop; 
 	}
+	calcInline(node, inlineState){
+		this.contentLeft = this.parent.contentLeft + inlineState.x;
+		if (node.style) this.contentRight = parsePx(node.style.width);
+		inlineState.x += this.contentRight;
+		if (this.contentLeft + this.contentRight > this.parent.contentLeft + this.parent.contentRight){
+			this.contentLeft = this.parent.contentLeft;
+			this.parent.contentBottom += inlineState.y;
+			this.contentTop = this.parent.contentTop + this.parent.contentBottom;
+			inlineState.x = inlineState.y = 0;
+		}
+		if (this.contentBottom > inlineState.y) inlineState.y = this.contentBottom;
+	}
 	build(node){
 		if (node.style && node.style.display == 'none') return;
 		var newlayout = new Layout(this, node);
-		newlayout.calcBlockWidth(node);
-		newlayout.calcBlockPos(node);
-		if (node.nodeName == '#text') newlayout.contentBottom = 16;
+		var inlineState = {x:0, y:0};
+		if (node.style && (node.style.display ? node.style.display == 'block' : node.nodeName == 'DIV')){
+			newlayout.display = 'block';
+			newlayout.calcBlockWidth(node);
+			newlayout.calcBlockPos(node);
+		}
+		if (node.nodeName == '#text'){
+			newlayout.contentBottom = 16;
+			newlayout.contentRight = node.data.length * 12;
+		}
+		if (newlayout.display != 'block'){
+			newlayout.display = 'inline';
+			inlineState = newlayout.calcInline(node, inlineState);
+		}else inlineState.x = inlineState.y = 0;
 		for(var i=0; i<node.childNodes.length; i++){
 			newlayout.build(node.childNodes[i]);
 		}
-		this.contentBottom += newlayout.totalHeight;
+		if (newlayout.display == 'block'){
+			this.contentBottom += newlayout.totalHeight;
+		}
 		if (node.style && node.style.height) this.contentBottom = parsePx(node.style.height);
 		this.children.push(newlayout);
 	}
@@ -134,7 +164,7 @@ class Layout {
 			if (this.parent && this.parent.node && this.parent.node.style && this.parent.node.style.color){
 				var col = parseRgb(this.parent.node.style.color);
 				domcore.glcolor(col, col>>8, col>>16);
-			}
+			}else domcore.glcolor(0, 0, 0);
 			domcore.gltext(this.contentLeft, this.contentTop, this.node.data);
 		}
 		this.children.forEach(c => c.draw());
